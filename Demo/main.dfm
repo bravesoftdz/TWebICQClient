@@ -1,7 +1,7 @@
 object FMain: TFMain
   Left = 0
   Top = 0
-  Caption = 'TWebICQClient Demo'
+  Caption = 'TWebICQClient Demo | http://zt.am/'
   ClientHeight = 289
   ClientWidth = 622
   Color = clBtnFace
