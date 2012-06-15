@@ -39,7 +39,8 @@ requires
   inet;
 
 contains
-  icqapilite in 'icqapilite.pas';
+  icqapilite in 'icqapilite.pas',
+  httptools in 'httptools.pas';
 
 end.
 

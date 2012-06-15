@@ -1,94 +1,117 @@
 unit icqapilite;
 
 { Z.Razor 2012 | zt.am | WebICQClient }
+
 interface
 
 uses
   System.SysUtils,
   System.Classes,
   System.StrUtils,
-  Vcl.Dialogs,
-  Vcl.ExtCtrls,
   Data.DBXJSON,
-  Data.DBXJSONCommon,
-  Data.DBXJSONReflect,
-  idHttp,
-  idsslopenssl,
-  idSocks,
-  HTTPApp;
+  HTTPApp,
+  httptools,
+  icqtimer;
 
 type
-  TReciveMessageEvent = procedure(Sender: TObject; UIN, Text: String) of object;
-
-type
-  TICQContact = record
-    UIN: String;
+  TICQGroup = record
     Name: String;
-    Status: String;
+    ID: String;
   end;
+
+  TICQContact = record
+    AimID: String;
+    DisplayID: String;
+    Friendly: String;
+    State: String;
+    UserType: String;
+    StatusMsg: String;
+    Group: TICQGroup;
+  end;
+
+  TICQMessage = record
+    MsgText: String;
+    MsgId: String;
+    TimeStamp: String;
+    Contact: TICQContact;
+  end;
+
+  TArrayOfICQContact = array of TICQContact;
+  TArrayOfICQGroup = array of TICQGroup;
+
+type
+  TReciveMessageEvent = procedure(Sender: TObject; Msg: TICQMessage) of object;
+  TLoginEvent = procedure(Sender: TObject; Connected: Boolean) of object;
 
 type
   TWebICQClient = class(TComponent)
   private
     FUIN: String;
     FPassword: String;
-    FLoggedIn: Boolean;
+    FConnected: Boolean;
     FStatus: String;
-    FCheckEvents: Boolean;
+    FAutoCheckEvents: Boolean;
     FOnMessageRecive: TReciveMessageEvent;
     FOnDisconnect: TNotifyEvent;
+    FOnLogin: TLoginEvent;
+    FOnUpdateContactList: TNotifyEvent;
     FCheckTimeOut: Integer;
     AimSid: String;
-    fetchBaseUrl: String;
-    keyA: String;
-    keyK: String;
-    sessionKey: String;
+    FetchBaseUrl: String;
+    KeyA: String;
+    KeyK: String;
+    SessionKey: String;
     jQuery: String;
-    HTTP: TidHTTP;
-    SSL: TIdSSLIOHandlerSocketOpenSSL;
-    SOCK: TIdSocksInfo;
-    CheckEventsTimer: TTimer;
-    function ReadSockHost: String;
-    function ReadSockVersion: TSocksVersion;
-    function ReadSockPort: Word;
+    CheckEventsTimer: TICQTimer;
+    FContacts: TArrayOfICQContact;
+    FGroups: TArrayOfICQGroup;
+    FMyInfo: TICQContact;
     function ReadAbout: String;
-    function ReadUserAgent: String;
     function GenerateRandomjQuery(Prev: String = ''): string;
     function GenerateRandomRequestId: String;
     function GenerateTimeNow: string;
     function GenerateRandom_: string;
-    function CreateHTTP(useSSL: Boolean = false): TidHTTP;
-    procedure WriteSockPort(const Value: Word);
-    procedure WriteSockHost(const Value: String);
-    procedure WriteSockVersion(const Value: TSocksVersion);
+    function AddContact(AContact: TICQContact; AGroup: TICQGroup): Integer;
+    function AddGroup(AGroup: TICQGroup): Integer;
+    function DeleteContact(Index: Integer): Boolean; overload;
+    function DeleteContact(ADisplayID: String): Boolean; overload;
+    function GetContact(Index: Integer): TICQContact;
+    function GetGroup(Index: Integer): TICQGroup;
+    function GetContactsCount: Integer;
+    function GetGroupsCount: Integer;
+    function ExtractICQContact(json: TJSONValue): TICQContact;
+    procedure ClearContacts;
     procedure DoCheckEvents;
-    procedure OnEventsTimer(Sender: TObject);
+    procedure OnCheckEventsTimer(Sender: TObject);
     procedure SetCheckTimeout(Value: Integer);
-    procedure WriteUserAgent(Value: String);
   public
-    property LoggedIn: Boolean read FLoggedIn;
+    property MyInfo: TICQContact read FMyInfo;
+    property Connected: Boolean read FConnected;
     property Status: string read FStatus;
-    function SendMessage(aUIN: String; Text: string): Boolean;
-    procedure Logout;
-    procedure Login; overload;
-    procedure Login(ACheckEvents: Boolean); overload;
-    procedure Login(aUIN, APassword: string); overload;
-    procedure Login(aUIN, APassword: string; ACheckEvents: Boolean); overload;
+    property Contacts[Index: Integer]: TICQContact read GetContact;
+    property ContactsCount: Integer read GetContactsCount;
+    property Groups[Index: Integer]: TICQGroup read GetGroup;
+    property GroupsCount: Integer read GetGroupsCount;
+    function SendMessage(AUIN: String; Text: string): Boolean;
+    function Logout: Boolean;
+    function Login: Boolean; overload;
+    function Login(AAutoCheckEvents: Boolean): Boolean; overload;
+    function Login(AUIN, APassword: string): Boolean; overload;
+    function Login(AUIN, APassword: string; AAutoCheckEvents: Boolean): Boolean; overload;
     procedure Free;
     procedure Clear;
+    procedure CheckEvents;
     constructor Create(AOwner: TComponent); override;
   published
     property UIN: String read FUIN write FUIN;
     property Password: String read FPassword write FPassword;
-    property CheckTimeOut: Integer read FCheckTimeOut write SetCheckTimeout;
-    property CheckEvents: Boolean read FCheckEvents write FCheckEvents default true;
-    property UserAgent: String read ReadUserAgent write WriteUserAgent;
-    property SockHost: string read ReadSockHost write WriteSockHost;
-    property SockPort: Word read ReadSockPort write WriteSockPort default 1080;
-    property SockVerion: TSocksVersion read ReadSockVersion write WriteSockVersion default svNoSocks;
+    property CheckTimeOut: Integer read FCheckTimeOut write SetCheckTimeout default 1000;
+    property AutoCheckEvents: Boolean read FAutoCheckEvents write FAutoCheckEvents default true;
     property About: String read ReadAbout;
-    property OnMessageRecive: TReciveMessageEvent read FOnMessageRecive write FOnMessageRecive default nil;
-    property OnDisconnect: TNotifyEvent read FOnDisconnect write FOnDisconnect default nil;
+    property OnMessageRecive: TReciveMessageEvent read FOnMessageRecive write FOnMessageRecive;
+    property OnDisconnect: TNotifyEvent read FOnDisconnect write FOnDisconnect;
+    property OnLogin: TLoginEvent read FOnLogin write FOnLogin;
+    property OnUpdateContactList: TNotifyEvent read FOnUpdateContactList write FOnUpdateContactList;
   end;
 
 procedure Register;
@@ -108,87 +131,71 @@ const
 
   { TWebICQClient }
 
+function TWebICQClient.AddContact(AContact: TICQContact; AGroup: TICQGroup): Integer;
+begin
+  SetLength(FContacts, Length(FContacts) + 1);
+  FContacts[High(FContacts)] := AContact;
+  FContacts[High(FContacts)].Group := AGroup;
+  Result := High(FContacts);
+end;
+
+function TWebICQClient.AddGroup(AGroup: TICQGroup): Integer;
+begin
+  SetLength(FGroups, Length(FGroups) + 1);
+  FGroups[High(FGroups)] := AGroup;
+  Result := High(FGroups);
+end;
+
+procedure TWebICQClient.CheckEvents;
+begin
+  if FConnected then DoCheckEvents;
+end;
+
 procedure TWebICQClient.Clear;
 begin
   CheckEventsTimer.Enabled := false;
-  FLoggedIn := false;
+  FConnected := false;
   AimSid := '';
-  fetchBaseUrl := '';
-  keyA := '';
-  sessionKey := '';
+  FetchBaseUrl := '';
+  KeyA := '';
+  SessionKey := '';
   jQuery := '';
-  FStatus := 'offline'
+  FStatus := 'offline';
+  ClearContacts; // !
+end;
+
+procedure TWebICQClient.ClearContacts;
+begin
+  SetLength(FContacts, 0);
 end;
 
 constructor TWebICQClient.Create(AOwner: TComponent);
 begin
   inherited;
-  HTTP := TidHTTP.Create;
-  HTTP.HandleRedirects := true;
-  HTTP.Request.UserAgent := 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)';
-  // HTTP.Request.AcceptEncoding := 'gzip, deflate';
-  // HTTP.Request.Referer := 'http://wlogin.icq.com/siteim/icqbar///js/partners/html/icqManager_ru.html';
-  HTTP.ReadTimeout := HTTP_TIMEOUT;
-  HTTP.ConnectTimeout := HTTP_TIMEOUT;
-  SSL := TIdSSLIOHandlerSocketOpenSSL.Create(HTTP);
-  SSL.ssloptions.method := sslvSSLv23;
-  SSL.ReadTimeout := HTTP_TIMEOUT;
-  SSL.ConnectTimeout := HTTP_TIMEOUT;
-  SSL.Port := 443;
-  HTTP.iohandler := SSL;
-  SOCK := TIdSocksInfo.Create(SSL);
-  SOCK.authentication := sanoauthentication;
-  SOCK.version := svNoSocks;
-  SSL.transparentproxy := SOCK;
   FCheckTimeOut := 1000;
-  FCheckEvents := true;
-  CheckEventsTimer := TTimer.Create(nil);
+  FAutoCheckEvents := true;
+  CheckEventsTimer := TICQTimer.Create(nil);
   CheckEventsTimer.Interval := FCheckTimeOut;
-  CheckEventsTimer.OnTimer := OnEventsTimer;
+  // CheckEventsTimer.Priority := tpIdle;
+  // CheckEventsTimer.KeepAlive := true;
+  CheckEventsTimer.OnTimer := OnCheckEventsTimer;
   Clear;
   GenerateTimeNow;
 end;
 
-function TWebICQClient.CreateHTTP(useSSL: Boolean = false): TidHTTP;
-var
-  aSSL: TIdSSLIOHandlerSocketOpenSSL;
-  aSOCK: TIdSocksInfo;
-begin
-  Result := TidHTTP.Create;
-  Result.HandleRedirects := true;
-  Result.Request.UserAgent := HTTP.Request.UserAgent;
-  Result.ReadTimeout := HTTP_TIMEOUT;
-  Result.ConnectTimeout := HTTP_TIMEOUT;
-  if not useSSL then Exit;
-  aSSL := TIdSSLIOHandlerSocketOpenSSL.Create(Result);
-  aSSL.ssloptions.method := sslvSSLv23;
-  aSSL.ReadTimeout := HTTP_TIMEOUT;
-  aSSL.ConnectTimeout := HTTP_TIMEOUT;
-  aSSL.Port := 443;
-  Result.iohandler := aSSL;
-  if SOCK.version <> svNoSocks then begin
-    aSOCK := TIdSocksInfo.Create(aSSL);
-    aSOCK.authentication := sanoauthentication;
-    aSOCK.version := SOCK.version;
-    aSSL.transparentproxy := aSOCK;
-  end;
-end;
-
 procedure TWebICQClient.Free;
 begin
-  FreeAndNil(HTTP);
-  FreeAndNil(CheckEventsTimer);
   inherited;
 end;
 
 function TWebICQClient.GenerateRandomjQuery(Prev: String = ''): string;
 var
-  val: longint;
+  v: longint;
 begin
   if Result = '' then Exit('16203349351070702583_133' + inttostr(random(900000000) + 1000000000));
-  val := strtoint(Copy(Result, Pos('_', Result), Length(Result) - Pos('_', Result) + 1));
+  v := strtoint(Copy(Result, Pos('_', Result), Length(Result) - Pos('_', Result) + 1));
   delete(Result, 1, Pos('_', Result));
-  Result := Result + inttostr(val + 1);
+  Result := Result + inttostr(v + 1);
 end;
 
 function TWebICQClient.GenerateRandomRequestId: String;
@@ -209,204 +216,228 @@ begin
   delete(Result, Length(Result) - 3, 4);
 end;
 
-procedure TWebICQClient.Login(ACheckEvents: Boolean);
+function TWebICQClient.GetContact(Index: Integer): TICQContact;
 begin
-  FCheckEvents := ACheckEvents;
-  Login;
+  if (Index < 0) or (Index > High(FContacts)) then Exit;
+  Result := FContacts[Index];
 end;
 
-procedure TWebICQClient.Login(aUIN, APassword: string; ACheckEvents: Boolean);
+function TWebICQClient.GetContactsCount: Integer;
 begin
-  FCheckEvents := ACheckEvents;
-  Login(aUIN, APassword);
+  Result := Length(FContacts);
 end;
 
-procedure TWebICQClient.Logout;
+function TWebICQClient.GetGroup(Index: Integer): TICQGroup;
+begin
+  if (Index < 0) or (Index > High(FGroups)) then Exit;
+  Result := FGroups[Index];
+end;
+
+function TWebICQClient.GetGroupsCount: Integer;
+begin
+  Result := Length(FGroups);
+end;
+
+function TWebICQClient.Logout: Boolean;
 var
-  url, page: string;
-  HTTP: TidHTTP;
+  URL: string;
+  Response: AnsiString;
+  ResponseCode: Integer;
 begin
+  Result := false;
   jQuery := GenerateRandomjQuery(jQuery);
-  url := Format(ICQ_LOGOUT_URL, [GenerateRandomRequestId, AimSid, jQuery, GenerateRandom_]);
-  HTTP := CreateHTTP((SOCK.version <> svNoSocks));
-  try
-    page := HTTP.Get(url);
-  except
-    // on E: Exception do ShowMessage(E.Message);
-  end;
-  FreeAndNil(HTTP);
+  URL := Format(ICQ_LOGOUT_URL, [GenerateRandomRequestId, AimSid, jQuery, GenerateRandom_]);
+  ResponseCode := Https_get(GetServerFromUrl(URL), GetResourceFromUrl(URL), Response);
   Clear;
   // FOnDisconnect(Self);
 end;
 
-procedure TWebICQClient.OnEventsTimer(Sender: TObject);
+procedure TWebICQClient.OnCheckEventsTimer(Sender: TObject);
 begin
+  // CheckEventsTimer.Enabled := false;
   DoCheckEvents;
+  // CheckEventsTimer.Enabled := true;
 end;
 
-procedure TWebICQClient.Login(aUIN, APassword: string);
+function TWebICQClient.Login(AUIN, APassword: string): Boolean;
 begin
-  FUIN := aUIN;
+  FUIN := AUIN;
   FPassword := APassword;
   Login;
 end;
 
-procedure TWebICQClient.Login;
-
-var
-  page, url: string;
-  json: TJSONObject;
-  HTTP: TidHTTP;
+function TWebICQClient.Login(AAutoCheckEvents: Boolean): Boolean;
 begin
+  FAutoCheckEvents := AAutoCheckEvents;
+  Login;
+end;
+
+function TWebICQClient.Login(AUIN, APassword: string; AAutoCheckEvents: Boolean): Boolean;
+begin
+  FAutoCheckEvents := AAutoCheckEvents;
+  Login(AUIN, APassword);
+end;
+
+function TWebICQClient.Login: Boolean;
+var
+  URL: string;
+  Response: AnsiString;
+  ResponseCode: Integer;
+  json: TJSONObject;
+begin
+  Result := false;
   Clear;
-  page := '';
   jQuery := GenerateRandomjQuery;
-  url := Format(ICQ_LOGIN_URL, [jQuery, FUIN, HTTPEncode(FPassword), GenerateRandom_]);
-  HTTP := CreateHTTP(true);
-  try
-    page := HTTP.Get(url);
-  except
-    // on E: Exception do ShowMessage(E.Message);
-  end;
-  FreeAndNil(HTTP);
-  FLoggedIn := (Pos('sessionKey', page) > 0);
-  if not FLoggedIn then Exit;
-  delete(page, 1, Pos('(', page)); // delete jQuery();
-  delete(page, Length(page), 1);
-  json := TJSONObject.ParseJSONValue(page) as TJSONObject;
+  URL := Format(ICQ_LOGIN_URL, [jQuery, HTTPEncode(FUIN), FPassword, GenerateRandom_]);
+  ResponseCode := Https_get(GetServerFromUrl(URL), GetResourceFromUrl(URL), Response);
+  FConnected := (Pos('sessionKey', Response) > 0);
+  if not FConnected then Exit;
+  delete(Response, 1, Pos('(', Response)); // delete jQuery();
+  delete(Response, Length(Response), 1);
+  json := TJSONObject.ParseJSONValue(Response) as TJSONObject;
   if not Assigned(json) then begin
-    FLoggedIn := false;
+    FConnected := false;
+    // FOnLogin(self, true);
     Exit;
   end;
-  sessionKey := json.Get('sessionKey').JsonValue.Value;
-  keyK := json.Get('k').JsonValue.Value;
+  SessionKey := json.Get('sessionKey').JsonValue.Value;
+  KeyK := json.Get('k').JsonValue.Value;
   AimSid := json.Get('aimsid').JsonValue.Value;
-  fetchBaseUrl := StringReplace(json.Get('fetchBaseURL').JsonValue.Value, '\', '', [rfReplaceAll]);
-  keyA := json.Get('a').JsonString.Value;
+  FetchBaseUrl := StringReplace(json.Get('fetchBaseURL').JsonValue.Value, '\', '', [rfReplaceAll]);
+  KeyA := json.Get('a').JsonString.Value;
   FStatus := TJSONObject(json.Get('myInfo').JsonValue).Get('state').JsonString.Value;
-  if FCheckEvents then CheckEventsTimer.Enabled := true;
   FreeAndNil(json);
+  if FAutoCheckEvents then CheckEventsTimer.Enabled := true;
+  Result := true;
   // DoCheckEvents;
+end;
+
+function TWebICQClient.DeleteContact(Index: Integer): Boolean;
+var
+  i: Integer;
+begin
+  Result := true;
+  if (Index < 0) or (Index > High(FContacts)) then Exit(false);
+  for i := Index to High(FContacts) - 1 do FContacts[i] := FContacts[i + 1];
+  SetLength(FContacts, Length(FContacts) - 1);
+end;
+
+function TWebICQClient.DeleteContact(ADisplayID: String): Boolean;
+var
+  i: Integer;
+begin
+  Result := false;
+  for i := 0 to High(FContacts) do
+    if FContacts[i].DisplayID = ADisplayID then Exit(DeleteContact(i));
 end;
 
 procedure TWebICQClient.DoCheckEvents;
 var
-  url, page, msg, suin, newfetchurl: string;
-  json, event: TJSONObject;
-  events: TJSONArray;
-  i: Integer;
+  URL, NewFetchUrl, EventType: string;
+  NewMsg: TICQMessage;
+  NewGroup: TICQGroup;
+  NewContact: TICQContact;
+  Response: AnsiString;
+  json, Event, eventData, Group, Buddy: TJSONObject;
+  Events, Groups, Buddies: TJSONArray;
+  i, j, k: Integer;
+  ContactsAdded: Boolean;
 begin
-  CheckEventsTimer.Enabled := false;
+  if not FConnected then Exit;
   try
-    page := '';
+    ContactsAdded := false;
     jQuery := GenerateRandomjQuery(jQuery);
-    url := Format(fetchBaseUrl + ICQ_FETCH_EVENT_URL, [GenerateRandomRequestId, jQuery, GenerateRandom_]);
-    try
-      page := HTTP.Get(url);
-    except
-      // on E: Exception do ShowMessage(E.Message);
-    end;
-    if Pos('"statusText":"Authentication Required"', page) > 0 then begin
+    URL := Format(FetchBaseUrl + ICQ_FETCH_EVENT_URL, [GenerateRandomRequestId, jQuery, GenerateRandom_]);
+    Response := '';
+    Response := Http_Get(URL);
+    if Pos('"statusText":"Authentication Required"', Response) > 0 then begin
       Clear;
-      // FOnDisconnect(Self);
+      FOnDisconnect(self);
       Exit;
     end;
-    if Pos('"statusText":"OK"', page) = 0 then Exit;
-    delete(page, 1, Pos('(', page)); // delete jQuery();
-    delete(page, Length(page), 1);
-    json := TJSONObject.ParseJSONValue(page) as TJSONObject;
+    if Pos('"statusText":"OK"', Response) = 0 then Exit;
+    delete(Response, 1, Pos('(', Response)); // delete jQuery();
+    delete(Response, Length(Response), 1);
+    try
+      json := TJSONObject.ParseJSONValue(Response) as TJSONObject;
+    except
+    end;
     if not Assigned(json) then Exit;
-    events := TJSONArray(TJSONObject(TJSONObject(json.Get('response').JsonValue).Get('data').JsonValue).Get('events')
+    Events := TJSONArray(TJSONObject(TJSONObject(json.Get('response').JsonValue).Get('data').JsonValue).Get('events')
       .JsonValue);
-    newfetchurl := TJSONObject(TJSONObject(json.Get('response').JsonValue).Get('data').JsonValue).Get('fetchBaseURL')
+    NewFetchUrl := TJSONObject(TJSONObject(json.Get('response').JsonValue).Get('data').JsonValue).Get('fetchBaseURL')
       .JsonValue.Value;
-    if newfetchurl <> '' then fetchBaseUrl := newfetchurl;
-    if not Assigned(events) then Exit;
-    for i := 0 to events.Size - 1 do begin
-      event := TJSONObject(events.Get(i));
-      if not Assigned(event) then break;
-      if event.Get('type').JsonValue.Value = 'im' then begin
-        msg := TJSONObject(event.Get('eventData').JsonValue).Get('message').JsonValue.Value;
-        suin := TJSONObject(TJSONObject(event.Get('eventData').JsonValue).Get('source').JsonValue).Get('aimId')
-          .JsonValue.Value;
-        OnMessageRecive(Self, suin, msg);
+    if NewFetchUrl <> '' then FetchBaseUrl := NewFetchUrl;
+    if not Assigned(Events) then Exit;
+    for i := 0 to Events.Size - 1 do begin
+      Event := TJSONObject(Events.Get(i));
+      EventType := Event.Get('type').JsonValue.Value;
+      if EventType = 'im' then begin
+        eventData := TJSONObject(Event.Get('eventData').JsonValue);
+        NewMsg.MsgText := eventData.Get('message').JsonValue.Value;
+        NewMsg.MsgId := eventData.Get('msgId').JsonValue.Value;
+        NewMsg.TimeStamp := eventData.Get('timestamp').JsonValue.Value;
+        NewMsg.Contact := ExtractICQContact(eventData.Get('source').JsonValue);
+        FOnMessageRecive(self, NewMsg);
+      end
+      else if EventType = 'buddylist' then begin
+        Groups := TJSONArray(TJSONObject(Event.Get('eventData').JsonValue).Get('groups').JsonValue);
+        for j := 0 to Groups.Size - 1 do begin
+          Group := TJSONObject(Groups.Get(j));
+          NewGroup.Name := Group.Get('name').JsonValue.Value;
+          NewGroup.ID := Group.Get('id').JsonValue.Value;
+          AddGroup(NewGroup);
+          Buddies := TJSONArray(Group.Get('buddies').JsonValue);
+          if Buddies.Size > 0 then ContactsAdded := true;
+          for k := 0 to Buddies.Size - 1 do AddContact(ExtractICQContact(Buddies.Get(k)), NewGroup);
+        end;
+      end
+      else if EventType = 'myInfo' then begin
+        FMyInfo := ExtractICQContact(Event.Get('eventData').JsonValue);
       end;
     end;
     FreeAndNil(json);
   finally
-    CheckEventsTimer.Enabled := true;
+    if ContactsAdded then FOnUpdateContactList(self);
   end;
 end;
 
-function TWebICQClient.SendMessage(aUIN, Text: string): Boolean;
+function TWebICQClient.ExtractICQContact(json: TJSONValue): TICQContact;
+begin
+  with Result, TJSONObject(json) do begin
+    AimID := Get('aimId').JsonValue.Value;
+    DisplayID := Get('displayId').JsonValue.Value;
+    Friendly := Get('friendly').JsonValue.Value;
+    State := Get('state').JsonValue.Value;
+    UserType := Get('userType').JsonValue.Value;
+    if Pos('statusMsg', json.Value) > 0 then StatusMsg := Get('statusMsg').JsonValue.Value;
+  end;
+end;
+
+function TWebICQClient.SendMessage(AUIN, Text: string): Boolean;
 var
-  url, page: string;
-  HTTP: TidHTTP;
+  URL: string;
+  Response: AnsiString;
 begin
   Result := false;
-  page := '';
   jQuery := GenerateRandomjQuery(jQuery);
-  url := Format(ICQ_SENDIM_URL, [GenerateRandomRequestId, AimSid, jQuery, aUIN, HTTPEncode(AnsiToUtf8(Text)),
-    GenerateTimeNow, GenerateRandom_]);
-  HTTP := CreateHTTP((SOCK.version <> svNoSocks));
-  try
-    page := HTTP.Get(url);
-  except
-    // on E: Exception do ShowMessage(E.Message);
-  end;
-  FreeAndNil(HTTP);
-  Result := (Pos('"statusCode":200', page) > 0);
+  URL := Format(ICQ_SENDIM_URL, [GenerateRandomRequestId, AimSid, jQuery, HTTPEncode(AUIN),
+    HTTPEncode(AnsiToUtf8(Text)), GenerateTimeNow, GenerateRandom_]);
+  Response := '';
+  Response := Http_Get(URL);
+  Result := (Pos('"statusCode":200', Response) > 0);
 end;
 
 procedure TWebICQClient.SetCheckTimeout(Value: Integer);
 begin
   FCheckTimeOut := Value;
   CheckEventsTimer.Interval := FCheckTimeOut;
+  CheckEventsTimer.Enabled := FAutoCheckEvents;
 end;
 
 function TWebICQClient.ReadAbout: String;
 begin
-  Result := 'ZRazor - 2012 - ZerverTeam';
-end;
-
-function TWebICQClient.ReadSockHost: String;
-begin
-  Result := SOCK.Host;
-end;
-
-function TWebICQClient.ReadSockPort: Word;
-begin
-  Result := SOCK.Port;
-end;
-
-function TWebICQClient.ReadSockVersion: TSocksVersion;
-begin
-  Result := SOCK.version;
-end;
-
-function TWebICQClient.ReadUserAgent: String;
-begin
-  Result := HTTP.Request.UserAgent;
-end;
-
-procedure TWebICQClient.WriteSockHost(const Value: String);
-begin
-  SOCK.Host := Value;
-end;
-
-procedure TWebICQClient.WriteSockPort(const Value: Word);
-begin
-  SOCK.Port := Value;
-end;
-
-procedure TWebICQClient.WriteSockVersion(const Value: TSocksVersion);
-begin
-  SOCK.version := Value;
-end;
-
-procedure TWebICQClient.WriteUserAgent(Value: String);
-begin
-  HTTP.Request.UserAgent := Value;
+  Result := 'ZRazor - 2012 - ZT.AM';
 end;
 
 procedure Register;

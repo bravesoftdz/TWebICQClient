@@ -93,6 +93,7 @@
 			<DCCReference Include="DbxCommonDriver.dcp"/>
 			<DCCReference Include="inet.dcp"/>
 			<DCCReference Include="icqapilite.pas"/>
+			<DCCReference Include="httptools.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

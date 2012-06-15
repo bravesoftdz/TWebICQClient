@@ -1,12 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.303,=C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.927,=C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.589,=C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.939,C:\Users\root\Documents\RAD Studio\Projects\Project1.dproj=D:\ProjectsGit\TWebICQClient\Demo\icq_demo.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.373,=D:\ProjectsGit\TWebICQClient\httptools.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.451,C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas=D:\ProjectsGit\TWebICQClient\Example\main.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.638,=C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2012.06.12 17:49:17.303,=C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2012.06.12 17:49:48.451,D:\ProjectsGit\TWebICQClient\Example\main.pas=C:\Users\root\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2012.06.12 17:49:48.451,D:\ProjectsGit\TWebICQClient\Example\main.dfm=C:\Users\root\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
-    <Transaction>2012.06.12 17:50:20.939,D:\ProjectsGit\TWebICQClient\Demo\icq_demo.dproj=C:\Users\root\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.451,C:\Users\root\Documents\RAD Studio\Projects\Unit1.dfm=D:\ProjectsGit\TWebICQClient\Example\main.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.351,D:\ProjectsGit\TWebICQClient\icqapilite.pas=D:\ProjectsGit\TWebICQClient\Demo\icqapilite.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.963,=D:\ProjectsGit\TWebICQClient\icqapilite.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.173,D:\ProjectsGit\TWebICQClient\Demo\icqapilite.pas=D:\ProjectsGit\TWebICQClient\icqapilite.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.109,D:\ProjectsGit\TWebICQClient\Example\main.pas=D:\ProjectsGit\TWebICQClient\Demo\main.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.109,D:\ProjectsGit\TWebICQClient\Example\main.dfm=D:\ProjectsGit\TWebICQClient\Demo\main.dfm</Transaction>
   </Transactions>
 </BorlandProject>

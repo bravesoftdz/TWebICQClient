@@ -2,13 +2,18 @@ program icq_demo;
 
 uses
   Vcl.Forms,
-  main in '..\Example\main.pas' {Form1};
+  main in 'main.pas' {FMain},
+  Vcl.Themes,
+  Vcl.Styles,
+  icqapilite in '..\icqapilite.pas',
+  httptools in '..\httptools.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
+  TStyleManager.TrySetStyle('Metro Blue');
+  Application.CreateForm(TFMain, FMain);
   Application.Run;
 end.
