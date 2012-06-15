@@ -11,7 +11,7 @@ uses
 function Https_Get(const ServerName, Resource: string; Var Response: AnsiString): Integer;
 function GetServerFromUrl(s: string): string;
 function GetResourceFromUrl(s: string): string;
-function Http_Get(const Url: string): string; overload;
+procedure Http_Get(const Url: string; var Response: String); overload;
 procedure Http_Get(const Url: string; Stream: TStream); overload;
 
 implementation
@@ -71,7 +71,12 @@ begin
   Result := 0;
   Response := '';
   hInet := InternetOpen(PChar(sUserAgent), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
-
+  InternetSetOptionW(hInet, INTERNET_OPTION_CONNECT_TIMEOUT, PChar('10000'), Length('10000'));
+  InternetSetOptionW(hInet, INTERNET_OPTION_SEND_TIMEOUT, PChar('10000'), Length('10000'));
+  InternetSetOptionW(hInet, INTERNET_OPTION_RECEIVE_TIMEOUT, PChar('10000'), Length('10000'));
+  InternetSetOptionW(hInet, INTERNET_OPTION_DATA_SEND_TIMEOUT, PChar('10000'), Length('10000'));
+  InternetSetOptionW(hInet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, PChar('10000'), Length('10000'));
+  InternetSetOptionW(hInet, INTERNET_OPTION_DISCONNECTED_TIMEOUT, PChar('10000'), Length('10000'));
   if hInet = nil then begin
     ErrorCode := GetLastError;
     raise Exception.Create(Format('InternetOpen Error %d Description %s', [ErrorCode, GetWinInetError(ErrorCode)]));
@@ -142,6 +147,7 @@ end;
 procedure Http_Get(const Url: string; Stream: TStream); overload;
 const
   BuffSize = 1024 * 1024;
+  timeout = '3000';
 var
   hInter: HINTERNET;
   UrlHandle: HINTERNET;
@@ -149,6 +155,12 @@ var
   Buffer: Pointer;
 begin
   hInter := InternetOpen('', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  InternetSetOptionW(hInter, INTERNET_OPTION_CONNECT_TIMEOUT, PChar(timeout), Length(timeout));
+  InternetSetOptionW(hInter, INTERNET_OPTION_SEND_TIMEOUT, PChar(timeout), Length(timeout));
+  InternetSetOptionW(hInter, INTERNET_OPTION_RECEIVE_TIMEOUT, PChar(timeout), Length(timeout));
+  InternetSetOptionW(hInter, INTERNET_OPTION_DATA_SEND_TIMEOUT, PChar(timeout), Length(timeout));
+  InternetSetOptionW(hInter, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, PChar(timeout), Length(timeout));
+  InternetSetOptionW(hInter, INTERNET_OPTION_DISCONNECTED_TIMEOUT, PChar(timeout), Length(timeout));
   if Assigned(hInter) then
     try
       Stream.Seek(0, 0);
@@ -170,17 +182,17 @@ begin
     end;
 end;
 
-function Http_Get(const Url: string): string; overload;
+procedure Http_Get(const Url: string; var Response: String); overload;
 Var
   StringStream: TStringStream;
 begin
-  Result := '';
+  Response := '';
   StringStream := TStringStream.Create('', TEncoding.UTF8);
   try
     Http_Get(Url, StringStream);
     if StringStream.Size > 0 then begin
       StringStream.Seek(0, 0);
-      Result := StringStream.ReadString(StringStream.Size);
+      Response := StringStream.ReadString(StringStream.Size);
     end;
   finally
     StringStream.Free;

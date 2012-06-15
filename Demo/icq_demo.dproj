@@ -46,7 +46,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<VCL_Custom_Styles>&quot;Metro Blue|VCLSTYLE|$(PUBLIC)\Documents\RAD Studio\9.0\Styles\MetroBlue.vsf&quot;</VCL_Custom_Styles>
+			<VCL_Custom_Styles>&quot;Turquoise Gray|VCLSTYLE|$(PUBLIC)\Documents\RAD Studio\9.0\Styles\TurquoiseGray.vsf&quot;</VCL_Custom_Styles>
 			<DCC_UsePackage>fmx;IndySystem;DBXInterBaseDriver;DataSnapClient;DataSnapCommon;DataSnapServer;DataSnapProviderClient;DbxCommonDriver;dbxcds;DBXOracleDriver;CustomIPTransport;dsnap;fmxase;IndyCore;inetdbxpress;IPIndyImpl;bindcompfmx;rtl;dbrtl;DbxClientDriver;bindcomp;inetdb;xmlrtl;ibxpress;IndyProtocols;DBXMySQLDriver;bindengine;soaprtl;DBXInformixDriver;DBXFirebirdDriver;inet;fmxobj;DBXSybaseASADriver;fmxdae;dbexpress;DataSnapIndy10ServerTransport;$(DCC_UsePackage)</DCC_UsePackage>
 			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
 			<Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
@@ -101,6 +101,7 @@
 			</DCCReference>
 			<DCCReference Include="..\icqapilite.pas"/>
 			<DCCReference Include="..\httptools.pas"/>
+			<DCCReference Include="..\icqtimer.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

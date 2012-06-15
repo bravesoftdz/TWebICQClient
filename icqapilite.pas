@@ -66,6 +66,7 @@ type
     FContacts: TArrayOfICQContact;
     FGroups: TArrayOfICQGroup;
     FMyInfo: TICQContact;
+    CheckEventsInProgress: Boolean;
     function ReadAbout: String;
     function GenerateRandomjQuery(Prev: String = ''): string;
     function GenerateRandomRequestId: String;
@@ -174,7 +175,7 @@ begin
   inherited;
   FCheckTimeOut := 1000;
   FAutoCheckEvents := true;
-  CheckEventsTimer := TICQTimer.Create(nil);
+  CheckEventsTimer := TICQTimer.Create;
   CheckEventsTimer.Interval := FCheckTimeOut;
   // CheckEventsTimer.Priority := tpIdle;
   // CheckEventsTimer.KeepAlive := true;
@@ -337,19 +338,20 @@ var
   NewMsg: TICQMessage;
   NewGroup: TICQGroup;
   NewContact: TICQContact;
-  Response: AnsiString;
+  Response: String;
   json, Event, eventData, Group, Buddy: TJSONObject;
   Events, Groups, Buddies: TJSONArray;
   i, j, k: Integer;
   ContactsAdded: Boolean;
 begin
   if not FConnected then Exit;
+  if CheckEventsInProgress then Exit;
   try
+    CheckEventsInProgress := true;
     ContactsAdded := false;
     jQuery := GenerateRandomjQuery(jQuery);
     URL := Format(FetchBaseUrl + ICQ_FETCH_EVENT_URL, [GenerateRandomRequestId, jQuery, GenerateRandom_]);
-    Response := '';
-    Response := Http_Get(URL);
+    Http_Get(URL, Response);
     if Pos('"statusText":"Authentication Required"', Response) > 0 then begin
       Clear;
       FOnDisconnect(self);
@@ -398,6 +400,7 @@ begin
     end;
     FreeAndNil(json);
   finally
+    CheckEventsInProgress := false;
     if ContactsAdded then FOnUpdateContactList(self);
   end;
 end;
@@ -417,14 +420,13 @@ end;
 function TWebICQClient.SendMessage(AUIN, Text: string): Boolean;
 var
   URL: string;
-  Response: AnsiString;
+  Response: String;
 begin
   Result := false;
   jQuery := GenerateRandomjQuery(jQuery);
   URL := Format(ICQ_SENDIM_URL, [GenerateRandomRequestId, AimSid, jQuery, HTTPEncode(AUIN),
     HTTPEncode(AnsiToUtf8(Text)), GenerateTimeNow, GenerateRandom_]);
-  Response := '';
-  Response := Http_Get(URL);
+  Http_Get(URL, Response);
   Result := (Pos('"statusCode":200', Response) > 0);
 end;
 

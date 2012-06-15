@@ -36,7 +36,7 @@ type
   end;
 
   { ------------------------------------------------------------------------------ }
-  TICQTimer = class(TComponent)
+  TICQTimer = class(TObject)
   private
     FEnabled: Boolean;
     FInterval: Cardinal;
@@ -50,7 +50,6 @@ type
     procedure UpdateTimer;
   public
     { Public declarations }
-    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
     { Published declarations }
@@ -99,12 +98,6 @@ end;
 
 { TgtTimer }
 { ------------------------------------------------------------------------------ }
-constructor TICQTimer.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FEnabled := True;
-  FInterval := 1000;
-end;
 
 { ------------------------------------------------------------------------------ }
 destructor TICQTimer.Destroy;

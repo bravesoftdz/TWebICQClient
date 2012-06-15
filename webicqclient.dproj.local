@@ -1,27 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899.12.30 00:00:00.000.164,D:\ProjectsGit\TWebICQClient\icqapilite.pas=D:\ProjectsGit\TWebICQClient\Demo\icqapilite.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.312,D:\ProjectsGit\TWebICQClient\icqapilite.pas=D:\ProjectsGit\TWebICQClient\Demo\icqapilite.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.194,=vcl.dcp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.758,=IndySystem.dcp</Transaction>
     <Transaction>1899.12.30 00:00:00.000.227,=DbxCommonDriver.dcp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.779,=IndyProtocols.dcp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.317,=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.299,=C:\Users\Root\Documents\RAD Studio\Projects\icqapilite.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.161,D:\ProjectsGit\TWebICQClient\httptools.pas=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.919,=rtl.dcp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.758,=IndySystem.dcp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.317,=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.161,D:\ProjectsGit\TWebICQClient\Unit1.pas=D:\ProjectsGit\TWebICQClient\httptools.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.779,=IndyProtocols.dcp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.039,C:\Users\Root\Documents\RAD Studio\Projects\webicqclient.dproj=C:\Users\Root\Documents\RAD Studio\Projects\Package1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.299,=C:\Users\Root\Documents\RAD Studio\Projects\icqapilite.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.164,D:\ProjectsGit\TWebICQClient\Demo\icqapilite.pas=D:\ProjectsGit\TWebICQClient\icqapilite.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.745,=IndyCore.dcp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.312,D:\ProjectsGit\TWebICQClient\Demo\icqapilite.pas=D:\ProjectsGit\TWebICQClient\icqapilite.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.039,C:\Users\Root\Documents\RAD Studio\Projects\Package1.dproj=C:\Users\Root\Documents\RAD Studio\Projects\webicqclient.dproj</Transaction>
     <Transaction>1899.12.30 00:00:00.000.217,=dbrtl.dcp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.392,=inet.dcp</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.212,=dsnap.dcp</Transaction>
     <Transaction>1899.12.30 00:00:00.000.936,C:\Users\Root\Desktop\Fugue Icons\bonus\icons-24\globe-green.png=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.212,=dsnap.dcp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.392,=inet.dcp</Transaction>
     <Transaction>1899.12.30 00:00:00.000.894,=C:\Users\Root\Desktop\Fugue Icons\bonus\icons-24\globe-green.png</Transaction>
+    <Transaction>2012.06.15 23:34:15.974,=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
+    <Transaction>2012.06.15 23:34:25.311,D:\ProjectsGit\TWebICQClient\threadtimer.pas=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
+    <Transaction>2012.06.15 23:58:58.198,=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
+    <Transaction>2012.06.15 23:59:06.420,D:\ProjectsGit\TWebICQClient\icqtimer.pas=D:\ProjectsGit\TWebICQClient\Unit1.pas</Transaction>
+    <Transaction>2012.06.16 00:18:48.596,D:\ProjectsGit\TWebICQClient\threadtimer.pas=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="httptools.pas"/>
     <File Path="icqapilite.pas"/>
+    <File Path="icqtimer.pas"/>
     <File Path="dbrtl.dcp"/>
     <File Path="DbxCommonDriver.dcp"/>
     <File Path="dsnap.dcp"/>

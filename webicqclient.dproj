@@ -94,6 +94,7 @@
 			<DCCReference Include="inet.dcp"/>
 			<DCCReference Include="icqapilite.pas"/>
 			<DCCReference Include="httptools.pas"/>
+			<DCCReference Include="icqtimer.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

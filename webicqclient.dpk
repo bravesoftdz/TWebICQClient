@@ -40,7 +40,8 @@ requires
 
 contains
   icqapilite in 'icqapilite.pas',
-  httptools in 'httptools.pas';
+  httptools in 'httptools.pas',
+  icqtimer in 'icqtimer.pas';
 
 end.
 
